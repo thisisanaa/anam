@@ -1,4 +1,4 @@
-﻿/**
+/**
  * SCANDAL Eau de Parfum • Sialkot Haute Parfumerie
  * 240-Frame 3D Flacon Animation Studio from frames perfume
  */
@@ -44,14 +44,29 @@
   async function init() {
     try {
       if (preloaderCount) preloaderCount.textContent = 'Connecting to frames perfume...';
-      const response = await fetch('/api/frames');
-      if (!response.ok) throw new Error('HTTP ' + response.status);
-      const data = await response.json();
+      let data = null;
+      try {
+        const response = await fetch('/api/frames');
+        if (response.ok) {
+          data = await response.json();
+        }
+      } catch (e) {
+        console.log('Static host mode: loading frames directly from ./frames/');
+      }
 
-      frameUrls = data.frames || [];
-      totalFrames = data.totalFrames || frameUrls.length;
+      if (data && data.frames && data.frames.length > 0) {
+        frameUrls = data.frames;
+        totalFrames = data.totalFrames || frameUrls.length;
+      } else {
+        totalFrames = 240;
+        frameUrls = [];
+        for (let i = 1; i <= totalFrames; i++) {
+          const numStr = String(i).padStart(3, '0');
+          frameUrls.push(`frames/ezgif-frame-${numStr}.jpg`);
+        }
+      }
 
-      console.log('Detected ' + totalFrames + ' frames from source: ' + (data.source || 'frames perfume'));
+      console.log('Loaded ' + totalFrames + ' flacon frames.');
 
       if (totalFrames === 0) {
         throw new Error('No frames detected in the frames directory.');
